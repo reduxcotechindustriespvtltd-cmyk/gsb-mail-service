@@ -1,20 +1,21 @@
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import Handlebars from "handlebars";
 import { getTransporter } from "./transport.js";
 import { generateInvoicePdf } from "../pdf/invoice.js";
+import * as templates from "../templates/index.js";
 import type { BookingEventPayload } from "../types.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const templatesDir = path.join(__dirname, "..", "templates");
+const TEMPLATE_SOURCES: Record<string, string> = {
+  "booking-confirmed": templates.bookingConfirmed,
+  "booking-updated": templates.bookingUpdated,
+  "booking-cancelled": templates.bookingCancelled,
+  "admin-notification": templates.adminNotification,
+};
 const compiledTemplates = new Map<string, HandlebarsTemplateDelegate>();
 
 function render(templateName: string, context: Record<string, unknown>): string {
   let template = compiledTemplates.get(templateName);
   if (!template) {
-    const source = fs.readFileSync(path.join(templatesDir, `${templateName}.hbs`), "utf8");
-    template = Handlebars.compile(source);
+    template = Handlebars.compile(TEMPLATE_SOURCES[templateName]);
     compiledTemplates.set(templateName, template);
   }
   return template(context);

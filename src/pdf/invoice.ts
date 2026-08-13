@@ -1,6 +1,6 @@
 import PDFDocument from "pdfkit";
-import fs from "node:fs";
 import type { BookingEventPayload } from "../types.js";
+import { LOGO_PNG_BASE64 } from "../assets/logo.js";
 
 // PDFKit's default Helvetica base font only supports WinAnsi encoding, which
 // has no glyph for ₹ (U+20B9) — it silently renders as a garbled superscript
@@ -35,16 +35,13 @@ export function generateInvoicePdf(payload: BookingEventPayload): Promise<Buffer
     const brandName = process.env.BRAND_NAME ?? "GSB Holidays";
     const supportEmail = process.env.BRAND_SUPPORT_EMAIL ?? "";
     const supportPhone = process.env.BRAND_SUPPORT_PHONE ?? "";
-    const logoPath = process.env.BRAND_LOGO_PATH ?? "./assets/logo.png";
 
     // Header: logo + company on the left, invoice meta on the right
     const topY = doc.y;
-    if (fs.existsSync(logoPath)) {
-      try {
-        doc.image(logoPath, 50, topY, { width: 130 });
-      } catch {
-        // Corrupt/unreadable logo file — the invoice still works without it.
-      }
+    try {
+      doc.image(Buffer.from(LOGO_PNG_BASE64, "base64"), 50, topY, { width: 130 });
+    } catch {
+      // Corrupt/unreadable logo data — the invoice still works without it.
     }
 
     doc
