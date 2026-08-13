@@ -74,31 +74,41 @@ export async function sendBookingEventEmails(payload: BookingEventPayload): Prom
   const context = buildContext(payload);
   const invoicePdf = await generateInvoicePdf(payload);
   const invoiceFilename = `invoice-${payload.invoiceNumber ?? payload.bookingId}.pdf`;
-  const messageIds: string[] = [];
+
+  // Sent in parallel, not sequentially — halves worst-case latency, which
+  // matters because the caller (admin_crm) waits on this whole round-trip.
+  const sends: Promise<string>[] = [];
 
   if (payload.email) {
     const { template, subject } = GUEST_TEMPLATE[payload.event];
-    const info = await transporter.sendMail({
-      from,
-      to: payload.email,
-      subject: `${subject} — ${context.brandName}`,
-      html: render(template, context),
-      attachments: [{ filename: invoiceFilename, content: invoicePdf }],
-    });
-    messageIds.push(info.messageId);
+    sends.push(
+      transporter
+        .sendMail({
+          from,
+          to: payload.email,
+          subject: `${subject} — ${context.brandName}`,
+          html: render(template, context),
+          attachments: [{ filename: invoiceFilename, content: invoicePdf }],
+        })
+        .then((info) => info.messageId)
+    );
   }
 
   if (payload.adminRecipients.length > 0) {
     const { label, color } = ADMIN_EVENT_LABEL[payload.event];
-    const info = await transporter.sendMail({
-      from,
-      to: payload.adminRecipients.join(","),
-      subject: `[${label}] ${payload.guestName} — ${payload.invoiceNumber ?? payload.bookingId}`,
-      html: render("admin-notification", { ...context, eventLabel: label, eventColor: color }),
-      attachments: [{ filename: invoiceFilename, content: invoicePdf }],
-    });
-    messageIds.push(info.messageId);
+    sends.push(
+      transporter
+        .sendMail({
+          from,
+          to: payload.adminRecipients.join(","),
+          subject: `[${label}] ${payload.guestName} — ${payload.invoiceNumber ?? payload.bookingId}`,
+          html: render("admin-notification", { ...context, eventLabel: label, eventColor: color }),
+          attachments: [{ filename: invoiceFilename, content: invoicePdf }],
+        })
+        .then((info) => info.messageId)
+    );
   }
 
+  const messageIds = await Promise.all(sends);
   return { messageIds };
 }
