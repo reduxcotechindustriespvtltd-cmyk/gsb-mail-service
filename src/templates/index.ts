@@ -114,3 +114,55 @@ export const adminNotification = `
   </div>
 </div>
 `;
+
+export const inquiryThankYou = `
+<div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #111827;">
+  <div style="background: #0f172a; padding: 24px; text-align: center;">
+    <h1 style="color: #fbbf24; margin: 0; font-size: 20px;">{{brandName}}</h1>
+  </div>
+  <div style="padding: 24px; border: 1px solid #e5e7eb;">
+    <h2 style="margin-top: 0;">Thank you for your inquiry!</h2>
+    <p>Hi {{fullName}},</p>
+    <p>
+      We've received your inquiry (Reference #{{invoiceNumber}}) and one of our travel
+      experts will reach out to you within the next <strong>24–48 hours</strong> to help
+      plan your trip.
+    </p>
+    <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+      {{#if packageInterest}}<tr><td style="padding: 6px 0; color: #6b7280;">Package</td><td style="padding: 6px 0; text-align: right;">{{packageInterest}}</td></tr>{{/if}}
+      {{#if checkInDate}}<tr><td style="padding: 6px 0; color: #6b7280;">Check-in</td><td style="padding: 6px 0; text-align: right;">{{checkInDate}}</td></tr>{{/if}}
+      {{#if checkOutDate}}<tr><td style="padding: 6px 0; color: #6b7280;">Check-out</td><td style="padding: 6px 0; text-align: right;">{{checkOutDate}}</td></tr>{{/if}}
+      {{#if guestCountLabel}}<tr><td style="padding: 6px 0; color: #6b7280;">Guests</td><td style="padding: 6px 0; text-align: right;">{{guestCountLabel}}</td></tr>{{/if}}
+      {{#if message}}<tr><td style="padding: 6px 0; color: #6b7280; vertical-align: top;">Your message</td><td style="padding: 6px 0; text-align: right;">{{message}}</td></tr>{{/if}}
+    </table>
+    <p>Need to add anything or have a question in the meantime? Just reply to this email or reach us at {{supportEmail}} {{#if supportPhone}}/ {{supportPhone}}{{/if}}.</p>
+    <p style="margin-top: 24px;">Talk soon!<br />— Team {{brandName}}</p>
+  </div>
+</div>
+`;
+
+export const inquiryAdminNotification = `
+<div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #111827;">
+  <div style="padding: 16px 24px; background: #16a34a; color: white;">
+    <strong>New Inquiry</strong>
+  </div>
+  <div style="padding: 24px; border: 1px solid #e5e7eb;">
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr><td style="padding: 6px 0; color: #6b7280;">Reference #</td><td style="padding: 6px 0; text-align: right;">{{invoiceNumber}}</td></tr>
+      <tr><td style="padding: 6px 0; color: #6b7280;">Name</td><td style="padding: 6px 0; text-align: right;">{{fullName}}</td></tr>
+      <tr><td style="padding: 6px 0; color: #6b7280;">Phone</td><td style="padding: 6px 0; text-align: right;">{{phone}}</td></tr>
+      <tr><td style="padding: 6px 0; color: #6b7280;">Email</td><td style="padding: 6px 0; text-align: right;">{{email}}</td></tr>
+      {{#if packageInterest}}<tr><td style="padding: 6px 0; color: #6b7280;">Package</td><td style="padding: 6px 0; text-align: right;">{{packageInterest}}</td></tr>{{/if}}
+      {{#if checkInDate}}<tr><td style="padding: 6px 0; color: #6b7280;">Check-in</td><td style="padding: 6px 0; text-align: right;">{{checkInDate}}</td></tr>{{/if}}
+      {{#if checkOutDate}}<tr><td style="padding: 6px 0; color: #6b7280;">Check-out</td><td style="padding: 6px 0; text-align: right;">{{checkOutDate}}</td></tr>{{/if}}
+      {{#if guestCountLabel}}<tr><td style="padding: 6px 0; color: #6b7280;">Guests</td><td style="padding: 6px 0; text-align: right;">{{guestCountLabel}}</td></tr>{{/if}}
+      {{#if message}}<tr><td style="padding: 6px 0; color: #6b7280; vertical-align: top;">Message</td><td style="padding: 6px 0; text-align: right;">{{message}}</td></tr>{{/if}}
+    </table>
+    {{#if crmLeadUrl}}
+    <p style="margin-top: 20px; text-align: center;">
+      <a href="{{crmLeadUrl}}" style="background: #0f172a; color: #fbbf24; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: bold;">View Lead in CRM</a>
+    </p>
+    {{/if}}
+  </div>
+</div>
+`;

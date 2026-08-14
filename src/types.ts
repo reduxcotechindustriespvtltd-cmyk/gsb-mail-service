@@ -39,6 +39,42 @@ export type BookingEventPayload = {
   adminRecipients: string[];
 };
 
+// A website contact-form submission, before it ever becomes a booking —
+// mirrors admin_crm/src/lib/notify-inquiry-event.ts's InquiryEventPayload.
+export type InquiryEventPayload = {
+  event: "INQUIRY_RECEIVED";
+  leadId: string;
+  invoiceNumber: string | null;
+
+  fullName: string;
+  phone: string;
+  email: string | null;
+
+  checkInDate: string | null;
+  checkOutDate: string | null;
+  guestsAdults: number | null;
+  guestsKids: number | null;
+  guestsInfants: number | null;
+
+  packageInterest: string | null;
+  message: string | null;
+
+  crmLeadUrl: string | null;
+  adminRecipients: string[];
+};
+
+export function isInquiryEventPayload(value: unknown): value is InquiryEventPayload {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return (
+    v.event === "INQUIRY_RECEIVED" &&
+    typeof v.leadId === "string" &&
+    typeof v.fullName === "string" &&
+    typeof v.phone === "string" &&
+    Array.isArray(v.adminRecipients)
+  );
+}
+
 export function isBookingEventPayload(value: unknown): value is BookingEventPayload {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;

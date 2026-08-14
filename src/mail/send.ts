@@ -2,13 +2,15 @@ import Handlebars from "handlebars";
 import { getTransporter } from "./transport.js";
 import { generateInvoicePdf } from "../pdf/invoice.js";
 import * as templates from "../templates/index.js";
-import type { BookingEventPayload } from "../types.js";
+import type { BookingEventPayload, InquiryEventPayload } from "../types.js";
 
 const TEMPLATE_SOURCES: Record<string, string> = {
   "booking-confirmed": templates.bookingConfirmed,
   "booking-updated": templates.bookingUpdated,
   "booking-cancelled": templates.bookingCancelled,
   "admin-notification": templates.adminNotification,
+  "inquiry-thank-you": templates.inquiryThankYou,
+  "inquiry-admin-notification": templates.inquiryAdminNotification,
 };
 const compiledTemplates = new Map<string, HandlebarsTemplateDelegate>();
 
@@ -104,6 +106,65 @@ export async function sendBookingEventEmails(payload: BookingEventPayload): Prom
           subject: `[${label}] ${payload.guestName} — ${payload.invoiceNumber ?? payload.bookingId}`,
           html: render("admin-notification", { ...context, eventLabel: label, eventColor: color }),
           attachments: [{ filename: invoiceFilename, content: invoicePdf }],
+        })
+        .then((info) => info.messageId)
+    );
+  }
+
+  const messageIds = await Promise.all(sends);
+  return { messageIds };
+}
+
+function inquiryGuestCountLabel(payload: InquiryEventPayload): string | null {
+  const parts = [
+    payload.guestsAdults ? `${payload.guestsAdults} Adult${payload.guestsAdults === 1 ? "" : "s"}` : null,
+    payload.guestsKids ? `${payload.guestsKids} Kid${payload.guestsKids === 1 ? "" : "s"}` : null,
+    payload.guestsInfants ? `${payload.guestsInfants} Infant${payload.guestsInfants === 1 ? "" : "s"}` : null,
+  ].filter(Boolean);
+  return parts.length > 0 ? parts.join(", ") : null;
+}
+
+function buildInquiryContext(payload: InquiryEventPayload) {
+  return {
+    ...payload,
+    brandName: process.env.BRAND_NAME ?? "GSB Holidays",
+    supportEmail: process.env.BRAND_SUPPORT_EMAIL ?? "",
+    supportPhone: process.env.BRAND_SUPPORT_PHONE ?? "",
+    checkInDate: payload.checkInDate ? formatDate(payload.checkInDate) : null,
+    checkOutDate: payload.checkOutDate ? formatDate(payload.checkOutDate) : null,
+    guestCountLabel: inquiryGuestCountLabel(payload),
+  };
+}
+
+// No PDF here — an inquiry has no confirmed price/booking yet, just a
+// reference number, so there's nothing to invoice.
+export async function sendInquiryEmails(payload: InquiryEventPayload): Promise<SendResult> {
+  const transporter = await getTransporter();
+  const from = process.env.MAIL_FROM ?? `"${process.env.BRAND_NAME ?? "GSB Holidays"}" <no-reply@example.com>`;
+  const context = buildInquiryContext(payload);
+  const sends: Promise<string>[] = [];
+
+  if (payload.email) {
+    sends.push(
+      transporter
+        .sendMail({
+          from,
+          to: payload.email,
+          subject: `We've received your inquiry — ${context.brandName}`,
+          html: render("inquiry-thank-you", context),
+        })
+        .then((info) => info.messageId)
+    );
+  }
+
+  if (payload.adminRecipients.length > 0) {
+    sends.push(
+      transporter
+        .sendMail({
+          from,
+          to: payload.adminRecipients.join(","),
+          subject: `[New Inquiry] ${payload.fullName} — ${payload.invoiceNumber ?? payload.leadId}`,
+          html: render("inquiry-admin-notification", context),
         })
         .then((info) => info.messageId)
     );
